@@ -9,8 +9,9 @@
 </div>
 
 <div class="container py-5">
-    <form method="post">
-        <div class="mb-3">
+    @if (Model != null)
+    {
+        <form method="post">
 
             <div class="mb-3">
                 <label class="form-label">Id</label>
@@ -41,6 +42,12 @@
 
                 </div>
 
-        </div>
-    </form>
+            </div>
+
+        </form>
+    }
+    else
+    {
+        <p>Tag not found!</p>
+    }
 </div>

@@ -1,6 +1,7 @@
 ﻿using Bloggie.Web.Models.Domain;
 using Bloggie.Web.Models.ViewModels;
 using Bloggie.Web.Repositories;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -114,6 +115,67 @@ namespace Bloggie.Web.Controllers
                 return View(null);
             }
 
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(EditBlogPostRequest editBlogPostRequest)
+        {
+            //map view model back to domain model
+            var blogPostDomainModel = new BlogPost()
+            {
+                Id = editBlogPostRequest.Id,
+                Heading = editBlogPostRequest.Heading,
+                PageTitle = editBlogPostRequest.PageTitle,
+                Content = editBlogPostRequest.Content,
+                Author = editBlogPostRequest.Author,
+                ShortDescription = editBlogPostRequest.ShortDescription,
+                FeaturedImageUrl = editBlogPostRequest.FeaturedImageUrl,
+                PublishedDate = editBlogPostRequest.PublishedDate,
+                UrlHandle = editBlogPostRequest.UrlHandle,
+                Visible = editBlogPostRequest.Visible
+            };
+            //map tags to domain model
+            var selectedTags = new List<Tag>();
+            foreach (var selectedTag in editBlogPostRequest.SelectedTags)
+            {
+                if (Guid.TryParse(selectedTag, out var tag))
+                {
+                    var foundTag = await tagRepository.GetAsync(tag);
+
+                    if (foundTag != null)
+                    {
+                        selectedTags.Add(foundTag);
+                    }
+                }
+            }
+            blogPostDomainModel.Tags = selectedTags;
+
+            var updatedBlog = await blogPostRepository.UpdateAsync(blogPostDomainModel);
+
+            if (updatedBlog != null)
+            {
+                // Show success notification
+                return RedirectToAction("Edit");
+            }
+
+            // Show error notification
+            return RedirectToAction("Edit");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Delete(EditBlogPostRequest editBlogPostRequest)
+        {
+            // Talk to repository to delete this blog post and tags
+            var deletedBlogPost = await blogPostRepository.DeleteAsync(editBlogPostRequest.Id);
+
+            if (deletedBlogPost != null)
+            {
+                // Show success notification
+                return RedirectToAction("List");
+            }
+
+            // Show error notification
+            return RedirectToAction("Edit", new { id = editBlogPostRequest.Id });
         }
     }
 }
